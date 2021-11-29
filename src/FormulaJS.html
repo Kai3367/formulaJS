@@ -1,0 +1,128 @@
+ <!DOCTYPE html>
+
+<html>
+  <meta charset="UTF-8">
+
+  <head>
+    <title>Formula JS</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: medium;
+      }
+      table {
+        border-collapse: collapse;
+        width: 60vw;
+      }
+      th {
+        border: 2px solid #cccccc;
+        background-color: #cccccc;
+        text-align: left;
+        padding: 4px;
+      }
+      td {
+        border: 2px solid #cccccc;
+        text-align: left;
+        padding: 4px;
+      }
+      tr:nth-child(even) {
+        background-color: #eeeeee;
+      }
+      #playArea {
+        width: 75vw; height: 65vh;
+        position: relative;
+      }
+      #track {
+        position: absolute; left: 0; top: 0;
+        z-index: 0;
+        background: #dddddd;
+      }
+      #racers {
+        position: absolute; left: 0; top: 0;
+        z-index: 1;
+      }
+      #inputPopup {
+        display: none;
+        position: fixed;
+        z-index: 2;
+        top: 10%;
+        left: 5%;
+        padding: 8px;
+        background: #cccccc;
+        border: 3px solid #eeeeee;
+      }
+      #gameOverPopup {
+        display: none;
+        position: fixed;
+        z-index: 2;
+        width: fit-content;
+        top: 10%;
+        left: 5%;
+        padding: 32px;
+        border: 3px solid #000;
+        background-image:
+          linear-gradient(45deg, #666 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #666 75%),
+          linear-gradient(45deg, transparent 75%, #666 75%),
+          linear-gradient(45deg, #666 25%, #fff 25%);
+        background-size: 80px 80px;       
+        background-position: 0 0, 0 0, -41px -40px, 40px 39px;
+        font-size: 400%;
+        font-weight: 900;
+        line-height: 105%;
+        color: #c00;
+        text-align: center;
+      }
+    </style>
+    <script src="formulaJSRace.js"></script>
+    <script src="formulaJSTracks.js"></script>
+    <script>
+      function openPopup() {
+        document.getElementById("gameOverPopup").style.display = "none"
+        document.getElementById("inputPopup").style.display = "block"
+      }
+
+      function closePopup() {
+        document.getElementById("inputPopup").style.display = "none"
+      }
+    </script>
+  </head>
+
+  <body onload="init(trackNames())">
+    <div id="trackText">FORMULA JS</div>
+
+    <div id="playArea">
+      <canvas id="track"></canvas>
+      <canvas id="racers"></canvas>
+    </div><br>
+    
+    <button onclick="openPopup()">START</button>
+
+    <div id="whoseTurn">Click START</div>
+
+    <button onclick="drive(7)">7</button><button onclick="drive(8)">8</button><button onclick="drive(9)">9</button><br>
+    <button onclick="drive(4)">4</button><button onclick="drive(5)">5</button><button onclick="drive(6)">6</button><br>
+    <button onclick="drive(1)">1</button><button onclick="drive(2)">2</button><button onclick="drive(3)">3</button><br><br>
+    
+    <div id="status"></div>
+
+    <div id="inputPopup">
+      <form>
+        <label for="trackName">Race track:</label>
+        <div id="trackSelection"></div><br>
+
+        <label for="drivers">Driver names:</label><br>
+        <input type="text" id="driver0" value=""><br>
+        <input type="text" id="driver1" value=""><br>
+        <input type="text" id="driver2" value=""><br>
+        <input type="text" id="driver3" value=""><br><br>
+        
+        <button type="button" onclick="start(getTracks())">Go!</button>
+        <button type="button" onclick="closePopup()">Cancel</button>
+      </form>
+    </div>
+
+    <div id="gameOverPopup">GAME<br>OVER</div>
+  </body>
+
+</html>
