@@ -160,6 +160,7 @@ const tracks = {
   }
 }
 
+// get all tracks scaled to current client size (called via "Go!" button in html)
 const getTracks = () => {
   const canvas = document.getElementById('track')
   const scaleX = canvas.clientWidth / 1000
@@ -193,4 +194,5 @@ const getTracks = () => {
   }))
 }
 
+// get all track names (called on load of html)
 const trackNames = () => Object.keys(tracks).map(id => tracks[id].name)
