@@ -16,8 +16,9 @@ let trackCanvas
 let racersCanvas
 let trackText
 let whoseTurnText
-let statusTab
+let statusTable
 
+let hiScores = undefined
 let track = {}
 let drivers = []
 let racers = []
@@ -197,6 +198,7 @@ class Track {
     // Number of racers
     this.N = N
     // polygon of the race track
+    this.name = polygon.name
     this.polygon = { outer: polygon.outer, inner: polygon.inner }
     // duplicate last outer polygon point for distance computation
     const outerN = this.polygon.outer.length
@@ -374,6 +376,82 @@ class Track {
   }
 }
 
+class HiScores {
+  constructor (hiScoresTable) {
+    this.available = true
+    this.hiScoresTable = hiScoresTable
+
+    try {
+      this.storage = window.localStorage
+      this.storage.setItem('__storage_test__', '')
+      this.storage.removeItem('__storage_test__')
+    } catch(e) {
+      // local storage not available
+      this.available = false
+      this.storage = undefined
+      this.hiScores = undefined
+    }
+
+    if (this.available) {
+      this.hiScores = JSON.parse(this.storage.getItem('__formulaJS_hiScores__')) || {}
+    }
+  }
+
+  update (racers, trackName) {
+    const finishers = racers.filter(r => r.ranking > 0)
+
+    if (this.available && finishers.length > 0) {
+      const hiScores = this.hiScores[trackName] || []
+
+      finishers.forEach(racer => {
+        // only store values (not objects) to minimize data volume in local storage
+        const score = [racer.driver, racer.ticks, racer.totalTime, racer.avgSpeed, racer.topSpeed]
+        hiScores.push(score)
+      })
+        
+      // rank by ticks
+      hiScores.sort((a, b) => a[1] - b[1])
+      // keep top 10
+      this.hiScores[trackName] = hiScores.slice(0, 10)
+      this.storage.setItem('__formulaJS_hiScores__', JSON.stringify(this.hiScores))
+    }
+  }
+
+  clear (trackName) {
+    if (this.available) {
+      delete this.hiScores[trackName]
+      this.storage.setItem('__formulaJS_hiScores__', JSON.stringify(this.hiScores))
+    }
+  }
+
+  show (trackName) {
+    if (this.available && trackName && this.hiScores[trackName]) {
+      this.hiScoresTable.innerHTML = `<table>
+        <tr>
+          <th>Ranking</th>
+          <th>Driver</th>
+          <th>Time (hh:mm:ss.s)</th>
+          <th>Avg. Speed (km/h)</th>
+          <th>Top Speed (km/h)</th>
+        </tr>
+        ${this.hiScores[trackName].reduce(
+          (html, score, rank) => `${html}
+            <tr>
+              <td>${rank + 1}</td>
+              <td>${score[0]}</td>
+              <td>${score[2]}</td>
+              <td>${Math.floor(score[3])}</td>
+              <td>${Math.floor(score[4])}</td>
+            </tr>`,
+          ''
+        )}
+      </table>`
+    } else {
+      this.hiScoresTable.innerHTML = 'No ranking available'
+    }
+  }
+}
+
 // initialize the game (called on load of html)
 const init = trackNames => {
   const playArea = document.getElementById('playArea')
@@ -393,7 +471,8 @@ const init = trackNames => {
 
   trackText = document.getElementById('trackText')
   whoseTurnText = document.getElementById('whoseTurn')
-  statusTab = document.getElementById('status')
+  statusTable = document.getElementById('status')
+  hiScores = new HiScores(document.getElementById('hiScores'))
 
   const target = document.getElementById('trackSelection')
   target.innerHTML = `<select id="selectedTrack">
@@ -476,6 +555,7 @@ const drive = where => {
 
     if (N === 0) {
       // no more active racers -> race is over
+      hiScores.update(racers, track.name)
       document.getElementById('gameOverPopup').style.display = 'block'
     }
   }
@@ -494,9 +574,9 @@ const drive = where => {
 
 // update the status of all racers
 const updateStatus = () => {
-  const winner = racers.filter(r => r.ranking === 1)[0]
+  const winner = racers.find(r => r.ranking === 1)
 
-  statusTab.innerHTML = `<table>
+  statusTable.innerHTML = `<table>
     <tr>
       <th>Driver</th>
       <th>Position</th>
@@ -566,4 +646,19 @@ const onKeypress = key => {
     Digit9: 9
   }
   drive(map[key.code])
+}
+
+const showHiScores = () => {
+  if (hiScores.available) {
+    hiScores.show(track.name)
+    document.getElementById('hiScoresPopup').style.display = 'block'
+  } else {
+    window.alert('Hi Scores not available. Check your browser settings!')
+  }
+}
+
+const clearHiScores = () => {
+  if (hiScores.available && track.name && window.confirm(`Do you really want to clear the all time ranking for the "${track.name}" track?`)) {
+    hiScores.clear(track.name)
+  }
 }
