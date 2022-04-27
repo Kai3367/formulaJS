@@ -73,19 +73,19 @@
         color: #c00;
         text-align: center;
       }
+      #hiScoresPopup {
+        display: none;
+        position: fixed;
+        z-index: 2;
+        top: 10%;
+        left: 5%;
+        padding: 8px;
+        background: #cccccc;
+        border: 3px solid #eeeeee;
+      }
     </style>
     <script src="formulaJSRace.js"></script>
     <script src="formulaJSTracks.js"></script>
-    <script>
-      function openPopup() {
-        document.getElementById("gameOverPopup").style.display = "none"
-        document.getElementById("inputPopup").style.display = "block"
-      }
-
-      function closePopup() {
-        document.getElementById("inputPopup").style.display = "none"
-      }
-    </script>
   </head>
 
   <body onload="init(trackNames())">
@@ -96,7 +96,9 @@
       <canvas id="racers"></canvas>
     </div><br>
     
-    <button onclick="openPopup()">START</button>
+    <button onclick="openInput()">START</button>
+    <button onclick="showHiScores()">Show all-time ranking</button>
+    <button onclick="clearHiScores()">Clear all-time ranking</button>
 
     <div id="whoseTurn">Click START</div>
 
@@ -118,11 +120,16 @@
         <input type="text" id="driver3" value=""><br><br>
         
         <button type="button" onclick="start(getTracks())">Go!</button>
-        <button type="button" onclick="closePopup()">Cancel</button>
+        <button type="button" onclick="closeInput()">Cancel</button>
       </form>
     </div>
 
     <div id="gameOverPopup">GAME<br>OVER</div>
+
+    <div id="hiScoresPopup">
+      <div id="hiScores"></div><br>
+      <button type="button" onclick="closeHiScores()">Continue</button>
+    </div>
   </body>
 
 </html>

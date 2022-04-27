@@ -16,8 +16,9 @@ let trackCanvas
 let racersCanvas
 let trackText
 let whoseTurnText
-let statusTab
+let statusTable
 
+let hiScores = undefined
 let track = {}
 let drivers = []
 let racers = []
@@ -197,6 +198,7 @@ class Track {
     // Number of racers
     this.N = N
     // polygon of the race track
+    this.name = polygon.name
     this.polygon = { outer: polygon.outer, inner: polygon.inner }
     // duplicate last outer polygon point for distance computation
     const outerN = this.polygon.outer.length
@@ -214,7 +216,7 @@ class Track {
     this.startFinish = polygon.startFinish
     this.text = `${polygon.name} (${this.distance} m)`
 
-    // direction to start race
+    // determine direction to start race
     const sf0 = this.startFinish[0]
     const sf1 = this.startFinish[1]
 
@@ -374,7 +376,89 @@ class Track {
   }
 }
 
-// initialize the game (called on load of html)
+class HiScores {
+  constructor (hiScoresTable) {
+    this.available = true
+    this.hiScoresTable = hiScoresTable
+
+    // check whether local storage is available
+    try {
+      this.storage = window.localStorage
+      this.storage.setItem('__storage_test__', '')
+      this.storage.removeItem('__storage_test__')
+    } catch(e) {
+      // local storage not available
+      this.available = false
+      this.storage = undefined
+      this.hiScores = undefined
+    }
+
+    if (this.available) {
+      // get all-time ranking from local storage
+      this.hiScores = JSON.parse(this.storage.getItem('__formulaJS_hiScores__')) || {}
+    }
+  }
+
+  // update and store all-time ranking with latest race results
+  update (racers, trackName) {
+    const finishers = racers.filter(r => r.ranking > 0)
+
+    // but only if local storage is available and anyone finished the race
+    if (this.available && finishers.length > 0) {
+      const hiScores = this.hiScores[trackName] || []
+
+      finishers.forEach(racer => {
+        // store only values (not objects) to minimize data volume in local storage
+        const score = [racer.driver, racer.ticks, racer.totalTime, racer.avgSpeed, racer.topSpeed]
+        hiScores.push(score)
+      })
+        
+      // rank by ticks
+      hiScores.sort((a, b) => a[1] - b[1])
+      // keep top 10
+      this.hiScores[trackName] = hiScores.slice(0, 10)
+      this.storage.setItem('__formulaJS_hiScores__', JSON.stringify(this.hiScores))
+    }
+  }
+
+  // delete all-time rankings for the current race track
+  clear (trackName) {
+    if (this.available) {
+      delete this.hiScores[trackName]
+      this.storage.setItem('__formulaJS_hiScores__', JSON.stringify(this.hiScores))
+    }
+  }
+
+  // create table of all-time rankings for the current race track
+  show (trackName) {
+    if (this.available && trackName && this.hiScores[trackName]) {
+      this.hiScoresTable.innerHTML = `<table>
+        <tr>
+          <th>Ranking</th>
+          <th>Driver</th>
+          <th>Time (hh:mm:ss.s)</th>
+          <th>Avg. Speed (km/h)</th>
+          <th>Top Speed (km/h)</th>
+        </tr>
+        ${this.hiScores[trackName].reduce(
+          (html, score, rank) => `${html}
+            <tr>
+              <td>${rank + 1}</td>
+              <td>${score[0]}</td>
+              <td>${score[2]}</td>
+              <td>${Math.floor(score[3])}</td>
+              <td>${Math.floor(score[4])}</td>
+            </tr>`,
+          ''
+        )}
+      </table>`
+    } else {
+      this.hiScoresTable.innerHTML = 'No ranking available'
+    }
+  }
+}
+
+// initialize the game (called on page load)
 const init = trackNames => {
   const playArea = document.getElementById('playArea')
   const width = playArea.clientWidth
@@ -391,10 +475,13 @@ const init = trackNames => {
     racersCanvas.height = height
   }
 
+  // get page elements
   trackText = document.getElementById('trackText')
   whoseTurnText = document.getElementById('whoseTurn')
-  statusTab = document.getElementById('status')
+  statusTable = document.getElementById('status')
+  hiScores = new HiScores(document.getElementById('hiScores'))
 
+  // create race track selection
   const target = document.getElementById('trackSelection')
   target.innerHTML = `<select id="selectedTrack">
     <option disabled selected value> -- select a race track -- </option>
@@ -404,7 +491,10 @@ const init = trackNames => {
     )}
   </select>`
 
+  // register event listener for number keys
   document.addEventListener('keypress', onKeypress)
+  // show race track selection popup
+  openInput()
 }
 
 // check whether a racer has crashed into another
@@ -450,7 +540,7 @@ const startRace = polygon => {
   updateStatus()
 }
 
-// drive the current racer to the chosen position (called via number buttons in html)
+// drive the current racer to the chosen position (called via number buttons)
 const drive = where => {
   if (N === 0 || racers.length === 0) return // GAME OVER or not started, yet
   if ([1, 2, 3, 4, 5, 6, 7, 8, 9].indexOf(where) < 0) return // invalid direction
@@ -476,6 +566,7 @@ const drive = where => {
 
     if (N === 0) {
       // no more active racers -> race is over
+      hiScores.update(racers, track.name)
       document.getElementById('gameOverPopup').style.display = 'block'
     }
   }
@@ -494,9 +585,9 @@ const drive = where => {
 
 // update the status of all racers
 const updateStatus = () => {
-  const winner = racers.filter(r => r.ranking === 1)[0]
+  const winner = racers.find(r => r.ranking === 1)
 
-  statusTab.innerHTML = `<table>
+  statusTable.innerHTML = `<table>
     <tr>
       <th>Driver</th>
       <th>Position</th>
@@ -527,7 +618,7 @@ const updateStatus = () => {
   </table>`
 }
 
-// start the game (called via "Go!" button in html)
+// start the game (called via "Go!" button on popup)
 const start = tracks => {
   // get and check input
   drivers = new Array(4).fill(0).map((d, i) => document.getElementById(`driver${i}`).value).filter(d => d)
@@ -552,7 +643,7 @@ const start = tracks => {
 // get the text about whose turn it is
 const whoseNextText = racer => `It's ${racer.driver}${racer.driver.match(/[sz]$/gi) ? "'" : "'s"} (${racer.color}) turn!`
 
-// react on key pressed (called via "keypress" event from browser)
+// react on key pressed (called via "keypress" event)
 const onKeypress = key => {
   const map = {
     Digit1: 1, KeyJ: 1,
@@ -566,4 +657,42 @@ const onKeypress = key => {
     Digit9: 9
   }
   drive(map[key.code])
+}
+
+// show popup for selecting race track and entering driver names (called via "START" button)
+const openInput = () => {
+  document.getElementById('gameOverPopup').style.display = 'none'
+  document.getElementById('inputPopup').style.display = 'block'
+}
+
+// close popup for selecting race track and driver names (called via "Cancel" button on popup)
+const closeInput = () => {
+  document.getElementById('inputPopup').style.display = 'none'
+}
+
+// show all time ranking for the current race track (called via "Show all-time ranking" button)
+const showHiScores = () => {
+  // only if local storage is available and track has been selected
+  if (hiScores.available && track.name) {
+    hiScores.show(track.name)
+    document.getElementById('hiScoresPopup').style.display = 'block'
+  } else if (!hiScores.available) {
+    window.alert('Hi Scores not available. Check your browser settings!')
+  }
+}
+
+// close all-time ranking popup (called via "Continue" button on popup)
+const closeHiScores = () => {
+  document.getElementById('hiScoresPopup').style.display = 'none'
+}  
+
+// delete all time ranking for the current race track (called via "Clear all-time ranking" button)
+const clearHiScores = () => {
+  if (
+    hiScores.available && 
+    track.name && 
+    window.confirm(`Do you really want to clear the all-time ranking for the "${track.name}" track?`)
+  ) {
+    hiScores.clear(track.name)
+  }
 }
