@@ -170,15 +170,22 @@ class Racer {
   }
 
   show () {
+    // show the racer icon
+    this.showIcon()
     this.ctx.beginPath()
     this.ctx.fillStyle = this.color
 
+    // show where the racer is heading
     this.headedAt.forEach(where => {
       this.ctx.fillRect(where.x - 1, where.y - 1, 3, 3)
     })
   }
 
   hide () {
+    // hide the racer icon
+    this.hideIcon()
+
+    // hide where the racer is heading
     this.headedAt.forEach(where => {
       this.ctx.clearRect(where.x - 1, where.y - 1, 3, 3)
     })
@@ -207,6 +214,7 @@ class Track {
     this.startFinish = polygon.startFinish
     this.text = `${polygon.name} (${this.distance} m)`
 
+    // direction to start race
     const sf0 = this.startFinish[0]
     const sf1 = this.startFinish[1]
 
@@ -236,14 +244,13 @@ class Track {
     const dx = sf1.x - sf0.x
     const dy = sf1.y - sf0.y
 
-    this.positions = new Array(N).fill(0).map((p, i) => {
-      p = {}
-      p.x = Math.floor(sf0.x + (i + 1) * dx / (N + 1))
-      p.y = Math.floor(sf0.y + (i + 1) * dy / (N + 1))
-      return p
-    })
+    this.positions = new Array(N).fill(0).map((p, i) => ({
+      x: Math.floor(sf0.x + (i + 1) * dx / (N + 1)),
+      y: Math.floor(sf0.y + (i + 1) * dy / (N + 1))
+    }))
   }
 
+  // display the race track
   show () {
     // fill outside of race track with border color
     this.ctx.beginPath()
@@ -281,6 +288,7 @@ class Track {
     this.ctx.stroke()
   }
 
+  // check whether a racer is off the road
   offRoad (racer) {
     // cf. https://stackoverflow.com/questions/217578
     const p = { x: racer.x, y: racer.y }
@@ -332,6 +340,7 @@ class Track {
     return !inside
   }
 
+  // check whether a racer has finished
   finish (racer) {
     // cf. https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function/24392281#24392281
     const rx0 = racer.x0
@@ -365,6 +374,7 @@ class Track {
   }
 }
 
+// initialize the game (called on load of html)
 const init = trackNames => {
   const playArea = document.getElementById('playArea')
   const width = playArea.clientWidth
@@ -397,11 +407,13 @@ const init = trackNames => {
   document.addEventListener('keypress', onKeypress)
 }
 
+// check whether a racer has crashed into another
 const crash = racer => racers.reduce(
   (c, r) => c || (racer !== r && Math.abs(racer.x - r.x) < 5 && Math.abs(racer.y - r.y) < 5)
   , false
 )
 
+// start the race
 const startRace = polygon => {
   racers = []
   ranking = 1
@@ -438,6 +450,7 @@ const startRace = polygon => {
   updateStatus()
 }
 
+// drive the current racer to the chosen position (called via number buttons in html)
 const drive = where => {
   if (N === 0 || racers.length === 0) return // GAME OVER or not started, yet
   if ([1, 2, 3, 4, 5, 6, 7, 8, 9].indexOf(where) < 0) return // invalid direction
@@ -479,6 +492,7 @@ const drive = where => {
   }
 }
 
+// update the status of all racers
 const updateStatus = () => {
   const winner = racers.filter(r => r.ranking === 1)[0]
 
@@ -513,6 +527,7 @@ const updateStatus = () => {
   </table>`
 }
 
+// start the game (called via "Go!" button in html)
 const start = tracks => {
   // get and check input
   drivers = new Array(4).fill(0).map((d, i) => document.getElementById(`driver${i}`).value).filter(d => d)
@@ -534,8 +549,10 @@ const start = tracks => {
   }
 }
 
+// get the text about whose turn it is
 const whoseNextText = racer => `It's ${racer.driver}${racer.driver.match(/[sz]$/gi) ? "'" : "'s"} (${racer.color}) turn!`
 
+// react on key pressed (called via "keypress" event from browser)
 const onKeypress = key => {
   const map = {
     Digit1: 1, KeyJ: 1,
