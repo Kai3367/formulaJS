@@ -484,6 +484,7 @@ const init = trackNames => {
   </select>`
 
   document.addEventListener('keypress', onKeypress)
+  openInput()
 }
 
 // check whether a racer has crashed into another
@@ -648,6 +649,18 @@ const onKeypress = key => {
   drive(map[key.code])
 }
 
+// show popup for selecting race track and entering driver names
+const openInput = () => {
+  document.getElementById('gameOverPopup').style.display = 'none'
+  document.getElementById('inputPopup').style.display = 'block'
+}
+
+// close popup for selecting race track and entering driver names
+const closeInput = () => {
+  document.getElementById('inputPopup').style.display = 'none'
+}
+
+// show all time ranking for the currently selected race track
 const showHiScores = () => {
   if (hiScores.available) {
     hiScores.show(track.name)
@@ -657,8 +670,18 @@ const showHiScores = () => {
   }
 }
 
+// close all-time ranking popup
+const closeHiScores = () => {
+  document.getElementById('hiScoresPopup').style.display = 'none'
+}  
+
+// delete all time ranking for the currently selected race track
 const clearHiScores = () => {
-  if (hiScores.available && track.name && window.confirm(`Do you really want to clear the all time ranking for the "${track.name}" track?`)) {
+  if (
+    hiScores.available && 
+    track.name && 
+    window.confirm(`Do you really want to clear the all time ranking for the "${track.name}" track?`)
+  ) {
     hiScores.clear(track.name)
   }
 }
