@@ -4,7 +4,6 @@ body {
 }
 table {
   border-collapse: collapse;
-  width: 60vw;
 }
 th {
   border: 2px solid #cccccc;
