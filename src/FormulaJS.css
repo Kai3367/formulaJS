@@ -1,0 +1,95 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: medium;
+}
+table {
+  border-collapse: collapse;
+  width: 60vw;
+}
+th {
+  border: 2px solid #cccccc;
+  background-color: #cccccc;
+  text-align: left;
+  padding: 4px;
+}
+td {
+  border: 2px solid #cccccc;
+  text-align: left;
+  padding: 4px;
+}
+tr:nth-child(even) {
+  background-color: #eeeeee;
+}
+tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+#playArea {
+  width: 75vw; height: 65vh;
+  position: relative;
+}
+#track {
+  position: absolute; left: 0; top: 0;
+  z-index: 0;
+  background: #dddddd;
+}
+#racers {
+  position: absolute; left: 0; top: 0;
+  z-index: 1;
+}
+#inputPopup {
+  display: none;
+  position: fixed;
+  z-index: 2;
+  top: 15%;
+  left: 5%;
+  padding: 8px;
+  background: #bbbbbb;
+  box-shadow: 5px 5px 5px black;
+}
+#gameOverPopup {
+  display: none;
+  position: fixed;
+  z-index: 2;
+  width: fit-content;
+  top: 15%;
+  left: 5%;
+  padding: 31px;
+  border: 3px solid black;
+  box-shadow: 5px 5px 5px black;
+  background-image:
+    linear-gradient(45deg, #666 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #666 75%),
+    linear-gradient(45deg, transparent 75%, #666 75%),
+    linear-gradient(45deg, #666 25%, #fff 25%);
+  background-size: 40px 40px;       
+  background-position: 0 0, 0 0, -21px -20px, 20px 19px;
+  text-align: center;
+}
+#hiScoresPopup {
+  display: none;
+  position: fixed;
+  z-index: 2;
+  top: 15%;
+  left: 5%;
+  padding: 8px;
+  background: #bbbbbb;
+  box-shadow: 5px 5px 5px black;
+}
+#gameOver {
+  width: fit-content;
+  padding: 3px;
+  font-size: 400%;
+  font-weight: 900;
+  line-height: 90%;
+  color: #c00;
+  background-color: white;
+}
+#trackText {
+  display: inline;
+}
+#hiScores {
+  display: inline;
+}
+#whoseTurn {
+  display: inline;
+}

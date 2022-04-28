@@ -413,8 +413,14 @@ class HiScores {
         hiScores.push(score)
       })
         
-      // rank by ticks
-      hiScores.sort((a, b) => a[1] - b[1])
+      // rank by ticks (time) desc, then avg speed asc, then top speed asc
+      hiScores.sort((a, b) => {
+        let d = a[1] - b[1]
+        if (d === 0) { d = b[3] - a[3] }
+        if (d === 0) { d = b[4] - a[4] }
+        return d
+      })
+
       // keep top 10
       this.hiScores[trackName] = hiScores.slice(0, 10)
       this.storage.setItem('__formulaJS_hiScores__', JSON.stringify(this.hiScores))
@@ -479,7 +485,12 @@ const init = trackNames => {
   trackText = document.getElementById('trackText')
   whoseTurnText = document.getElementById('whoseTurn')
   statusTable = document.getElementById('status')
-  hiScores = new HiScores(document.getElementById('hiScores'))
+  hiScores = new HiScores(document.getElementById('hiScoresTable'))
+
+  // show buttons for all-time ranking only if local storage available
+  if (hiScores.available) {
+    document.getElementById('hiScores').style.display = 'inline'
+  }
 
   // create race track selection
   const target = document.getElementById('trackSelection')
@@ -494,7 +505,7 @@ const init = trackNames => {
   // register event listener for number keys
   document.addEventListener('keypress', onKeypress)
   // show race track selection popup
-  openInput()
+  openStart()
 }
 
 // check whether a racer has crashed into another
@@ -533,7 +544,7 @@ const startRace = polygon => {
 
   // display whose turn it is
   whoseTurn = 0
-  whoseTurnText.innerHTML = whoseNextText(racers[0]) + ` Go ${track.direction}!`
+  whoseTurnText.innerHTML = whoseNextText(racers[0]).replace('!', ' - ') + `go ${track.direction}!`
   racers[0].show()
 
   // display status table
@@ -646,27 +657,27 @@ const whoseNextText = racer => `It's ${racer.driver}${racer.driver.match(/[sz]$/
 // react on key pressed (called via "keypress" event)
 const onKeypress = key => {
   const map = {
-    Digit1: 1, KeyJ: 1,
-    Digit2: 2, KeyK: 2,
-    Digit3: 3, KeyL: 3,
-    Digit4: 4, KeyU: 4,
-    Digit5: 5, KeyI: 5,
-    Digit6: 6, KeyO: 6,
-    Digit7: 7,
-    Digit8: 8,
-    Digit9: 9
+    Digit1: 1, Numpad1: 1, KeyJ: 1,
+    Digit2: 2, Numpad2: 2, KeyK: 2,
+    Digit3: 3, Numpad3: 3, KeyL: 3,
+    Digit4: 4, Numpad4: 4, KeyU: 4,
+    Digit5: 5, Numpad5: 5, KeyI: 5,
+    Digit6: 6, Numpad6: 6, KeyO: 6,
+    Digit7: 7, Numpad7: 7,
+    Digit8: 8, Numpad8: 8,
+    Digit9: 9, Numpad9: 9
   }
   drive(map[key.code])
 }
 
 // show popup for selecting race track and entering driver names (called via "START" button)
-const openInput = () => {
+const openStart = () => {
   document.getElementById('gameOverPopup').style.display = 'none'
   document.getElementById('inputPopup').style.display = 'block'
 }
 
 // close popup for selecting race track and driver names (called via "Cancel" button on popup)
-const closeInput = () => {
+const closeStart = () => {
   document.getElementById('inputPopup').style.display = 'none'
 }
 
