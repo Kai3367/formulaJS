@@ -128,6 +128,52 @@ class Racer {
     this.showIcon()
   }
 
+  // show crash icon (💥) at current position, or at canvas edge along trajectory if outside
+  showCrash () {
+    const emojiSize = 16
+    const canvas = this.ctx.canvas
+
+    let x = this.x
+    let y = this.y
+
+    // If position is outside canvas, find intersection with canvas edge along trajectory
+    if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
+      // Calculate trajectory from previous position to current position
+      const dx = this.x - this.x0
+      const dy = this.y - this.y0
+
+      // Find the t value where trajectory intersects each edge
+      let t = 1
+
+      if (dx !== 0) {
+        if (this.x < 0) {
+          t = Math.min(t, -this.x0 / dx)
+        } else if (this.x > canvas.width) {
+          t = Math.min(t, (canvas.width - this.x0) / dx)
+        }
+      }
+
+      if (dy !== 0) {
+        if (this.y < 0) {
+          t = Math.min(t, -this.y0 / dy)
+        } else if (this.y > canvas.height) {
+          t = Math.min(t, (canvas.height - this.y0) / dy)
+        }
+      }
+
+      // Calculate position at edge
+      x = this.x0 + dx * t
+      y = this.y0 + dy * t
+
+      // Clamp to ensure we're just inside the edge
+      x = Math.max(emojiSize / 2, Math.min(canvas.width - emojiSize / 2, x))
+      y = Math.max(emojiSize / 2, Math.min(canvas.height - emojiSize / 2, y))
+    }
+
+    this.ctx.font = '16px serif'
+    this.ctx.fillText('💥', x - 8, y + 6)
+  }
+
   // set the racer's start position and show its icon
   startAt (x, y) {
     this.x = x
@@ -553,6 +599,15 @@ const startRace = polygon => {
 
 // drive the current racer to the chosen position (called via number buttons)
 const drive = where => {
+  // Multiplayer mode: send move to server
+  if (typeof gameMode !== 'undefined' && gameMode === 'ONLINE_MP') {
+    if (multiplayerClient && multiplayerClient.roomCode) {
+      multiplayerClient.sendMove(where)
+      return // Server will handle the move and send back state update
+    }
+  }
+
+  // Local mode: original logic
   if (N === 0 || racers.length === 0) return // GAME OVER or not started, yet
   if ([1, 2, 3, 4, 5, 6, 7, 8, 9].indexOf(where) < 0) return // invalid direction
 
@@ -562,12 +617,19 @@ const drive = where => {
   racer.drive(where)
 
   const finished = track.finish(racer)
+  const crashed = crash(racer)
+  const offRoad = track.offRoad(racer)
 
-  if (crash(racer) || track.offRoad(racer) || finished) {
+  if (crashed || offRoad || finished) {
     // racer crashed into another one or drove off the race course or has finished the race
     racer.active = false
     whoseTurn--
     N--
+
+    if (crashed || offRoad) {
+      // show crash icon
+      racer.showCrash()
+    }
 
     if (finished) {
       // racer finished the race -> update their ranking
@@ -673,7 +735,20 @@ const onKeypress = key => {
 // show popup for selecting race track and entering driver names (called via "START" button)
 const openStart = () => {
   document.getElementById('gameOverPopup').style.display = 'none'
-  document.getElementById('inputPopup').style.display = 'block'
+
+  // Check if in multiplayer mode and in a room
+  if (typeof gameMode !== 'undefined' && gameMode === 'ONLINE_MP' &&
+      typeof multiplayerClient !== 'undefined' && multiplayerClient && multiplayerClient.roomCode) {
+    // Return to multiplayer lobby
+    showLobby(multiplayerClient.roomCode, multiplayerClient.players);
+    updateStartButtonState();
+  } else if (document.getElementById('modeSelectionPopup')) {
+    // Show mode selection for new game
+    openModeSelection();
+  } else {
+    // Local mode
+    document.getElementById('inputPopup').style.display = 'block'
+  }
 }
 
 // close popup for selecting race track and driver names (called via "Cancel" button on popup)
@@ -700,10 +775,20 @@ const closeHiScores = () => {
 // delete all time ranking for the current race track (called via "Clear all-time ranking" button)
 const clearHiScores = () => {
   if (
-    hiScores.available && 
-    track.name && 
+    hiScores.available &&
+    track.name &&
     window.confirm(`Do you really want to clear the all-time ranking for the "${track.name}" track?`)
   ) {
     hiScores.clear(track.name)
   }
+}
+
+// show help popup (called via "Help" button)
+const showHelp = () => {
+  document.getElementById('helpPopup').style.display = 'block'
+}
+
+// close help popup (called via "Close" button on help popup)
+const closeHelp = () => {
+  document.getElementById('helpPopup').style.display = 'none'
 }
