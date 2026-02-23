@@ -6,7 +6,33 @@ Racing game inspired by the paper and pencil game from boomers' and gen X school
 
 ## Installation
 
+### Local Play (No Server Required)
+
 Download the `FormulaJS.zip` file from [here](download). Unzip the file and open `FormulaJS.html` in your favorite browser. Tested on Firefox, Chrome, and Edge.
+
+### Multiplayer Mode (Server Required)
+
+To play online multiplayer, you need to run the game server:
+
+1. Make sure you have [Node.js](https://nodejs.org/) installed (v18 or higher recommended)
+
+2. Clone the repository and install dependencies:
+   ```bash
+   git clone https://github.com/Kai3367/formulaJS.git
+   cd formulaJS
+   npm install
+   ```
+
+3. Start the server:
+   ```bash
+   npm start
+   ```
+
+4. Open your browser and navigate to `http://localhost:8080`
+
+5. Select "Online Multiplayer" mode and create or join a room
+
+Players on the same network can connect by using the host machine's IP address (e.g., `http://192.168.1.100:8080`).
 
 ## How to play
 
