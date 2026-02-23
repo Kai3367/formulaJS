@@ -31,110 +31,111 @@
     <div id="playArea">
       <canvas id="track"></canvas>
       <canvas id="racers"></canvas>
+
+      <!-- Popups (centered on play area) -->
+      <div id="inputPopup">
+        <form>
+          <label for="trackName">Race track:</label>
+          <div id="trackSelection"></div><br>
+
+          <label for="drivers">Driver names:</label><br>
+          <input type="text" id="driver0" value=""><br>
+          <input type="text" id="driver1" value=""><br>
+          <input type="text" id="driver2" value=""><br>
+          <input type="text" id="driver3" value=""><br><br>
+
+          <button type="button" onclick="start(getTracks())">Go!</button>
+        </form>
+      </div>
+
+      <div id="gameOverPopup">
+        <div id="gameOver">
+          GAME<br>
+          OVER<br>
+        </div><br>
+        <button type="button" onclick="openStart()">Start new race</button>
+      </div>
+
+      <div id="hiScoresPopup">
+        <div id="hiScoresTable"></div><br>
+        <button type="button" onclick="closeHiScores()">Continue</button>
+      </div>
+
+      <div id="helpPopup">
+        <div id="helpContent">
+          <h1>Formula JS</h1>
+          <p>Racing game inspired by the paper and pencil game from boomers' and gen X school days. No-frills implementation using only plain html/css and javascript.</p>
+
+          <h2>How to play</h2>
+          <p><strong>Formula JS</strong> is a simple but tricky simulation of sports car racing in which players try to pilot their racer along the circuit for one lap without crashing into other cars or going off the track.</p>
+
+          <p>Drivers take turns to make their next move. From their current position they choose one from a grid of nine allowed next positions that are determined by extrapolating from their previous position and speed.</p>
+
+          <p>Game play should be mostly self-explanatory. When it's your turn click one of the nine numbered buttons at the bottom of the screen or press the corresponding key to select the target position for your next move.</p>
+
+          <p>The all-time ranking shows the top ten drivers on each track. Drivers are ranked by the total lap time, then average speed, then top speed.</p>
+
+          <p>Note that the game only checks whether the racer positions are within the track. Therefore, it is possible for racers to cut corners or even "tunnel" through the track border if the space between adjacent track portions is narrow.</p>
+        </div><br>
+        <button type="button" onclick="closeHelp()">Close</button>
+      </div>
+
+      <!-- Mode Selection Popup -->
+      <div id="modeSelectionPopup">
+        <h2>Formula JS</h2>
+        <p>Select game mode:</p>
+        <button type="button" onclick="selectMode('LOCAL')">Local Play (Hot-Seat)</button>
+        <button type="button" onclick="selectMode('ONLINE_MP')">Online Multiplayer</button>
+      </div>
+
+      <!-- Multiplayer: Create Room Popup -->
+      <div id="createRoomPopup">
+        <h2>Create Game Room</h2>
+        <input type="text" id="hostPlayerName" placeholder="Your name" maxlength="20"><br><br>
+        <button type="button" onclick="createMultiplayerRoom()">Create Room</button>
+        <button type="button" onclick="backToModeSelection()">Back</button>
+      </div>
+
+      <!-- Multiplayer: Join Room Popup -->
+      <div id="joinRoomPopup">
+        <h2>Join Game Room</h2>
+        <input type="text" id="joinPlayerName" placeholder="Your name" maxlength="20"><br>
+        <input type="text" id="joinRoomCode" placeholder="Room code (e.g., ABC123)" maxlength="6"><br><br>
+        <button type="button" onclick="joinMultiplayerRoom()">Join Room</button>
+        <button type="button" onclick="backToModeSelection()">Back</button>
+      </div>
+
+      <!-- Multiplayer: Lobby Popup -->
+      <div id="lobbyPopup">
+        <h2>Lobby</h2>
+        <div id="roomCodeContainer">
+          <strong>Room Code:</strong>
+          <span id="lobbyRoomCode" style="font-size: 24px; letter-spacing: 2px;"></span>
+          <button type="button" onclick="copyLobbyRoomCode()" style="margin-left: 10px;">Copy</button>
+        </div>
+        <br>
+        <div id="playerListContainer">
+          <h3>Players:</h3>
+          <div id="playerList"></div>
+        </div>
+        <br>
+        <label>
+          <input type="checkbox" id="readyCheckbox" onchange="toggleReady()">
+          Ready
+        </label>
+        <br><br>
+        <button id="startMultiplayerButton" type="button" onclick="startMultiplayerGame()" style="display:none">
+          Start Game
+        </button>
+        <button type="button" onclick="leaveMultiplayerRoom()">Leave Room</button>
+      </div>
     </div><br>
-    
+
     <button onclick="drive(7)">7</button><button onclick="drive(8)">8</button><button onclick="drive(9)">9</button><br>
     <button onclick="drive(4)">4</button><button onclick="drive(5)">5</button><button onclick="drive(6)">6</button><br>
     <button onclick="drive(1)">1</button><button onclick="drive(2)">2</button><button onclick="drive(3)">3</button><br><br>
-    
+
     <div id="status"></div>
-
-    <div id="inputPopup">
-      <form>
-        <label for="trackName">Race track:</label>
-        <div id="trackSelection"></div><br>
-
-        <label for="drivers">Driver names:</label><br>
-        <input type="text" id="driver0" value=""><br>
-        <input type="text" id="driver1" value=""><br>
-        <input type="text" id="driver2" value=""><br>
-        <input type="text" id="driver3" value=""><br><br>
-        
-        <button type="button" onclick="start(getTracks())">Go!</button>
-      </form>
-    </div>
-
-    <div id="gameOverPopup">
-      <div id="gameOver">
-        GAME<br>
-        OVER<br>
-      </div><br>
-      <button type="button" onclick="openStart()">Start new race</button>
-    </div>
-
-    <div id="hiScoresPopup">
-      <div id="hiScoresTable"></div><br>
-      <button type="button" onclick="closeHiScores()">Continue</button>
-    </div>
-
-    <div id="helpPopup">
-      <div id="helpContent">
-        <h1>Formula JS</h1>
-        <p>Racing game inspired by the paper and pencil game from boomers' and gen X school days. No-frills implementation using only plain html/css and javascript.</p>
-
-        <h2>How to play</h2>
-        <p><strong>Formula JS</strong> is a simple but tricky simulation of sports car racing in which players try to pilot their racer along the circuit for one lap without crashing into other cars or going off the track.</p>
-
-        <p>Drivers take turns to make their next move. From their current position they choose one from a grid of nine allowed next positions that are determined by extrapolating from their previous position and speed.</p>
-
-        <p>Game play should be mostly self-explanatory. When it's your turn click one of the nine numbered buttons at the bottom of the screen or press the corresponding key to select the target position for your next move.</p>
-
-        <p>The all-time ranking shows the top ten drivers on each track. Drivers are ranked by the total lap time, then average speed, then top speed.</p>
-
-        <p>Note that the game only checks whether the racer positions are within the track. Therefore, it is possible for racers to cut corners or even "tunnel" through the track border if the space between adjacent track portions is narrow.</p>
-      </div><br>
-      <button type="button" onclick="closeHelp()">Close</button>
-    </div>
-
-    <!-- Mode Selection Popup -->
-    <div id="modeSelectionPopup">
-      <h2>Formula JS</h2>
-      <p>Select game mode:</p>
-      <button type="button" onclick="selectMode('LOCAL')">Local Play (Hot-Seat)</button>
-      <button type="button" onclick="selectMode('ONLINE_MP')">Online Multiplayer</button>
-    </div>
-
-    <!-- Multiplayer: Create Room Popup -->
-    <div id="createRoomPopup">
-      <h2>Create Game Room</h2>
-      <input type="text" id="hostPlayerName" placeholder="Your name" maxlength="20"><br><br>
-      <button type="button" onclick="createMultiplayerRoom()">Create Room</button>
-      <button type="button" onclick="backToModeSelection()">Back</button>
-    </div>
-
-    <!-- Multiplayer: Join Room Popup -->
-    <div id="joinRoomPopup">
-      <h2>Join Game Room</h2>
-      <input type="text" id="joinPlayerName" placeholder="Your name" maxlength="20"><br>
-      <input type="text" id="joinRoomCode" placeholder="Room code (e.g., ABC123)" maxlength="6"><br><br>
-      <button type="button" onclick="joinMultiplayerRoom()">Join Room</button>
-      <button type="button" onclick="backToModeSelection()">Back</button>
-    </div>
-
-    <!-- Multiplayer: Lobby Popup -->
-    <div id="lobbyPopup">
-      <h2>Lobby</h2>
-      <div id="roomCodeContainer">
-        <strong>Room Code:</strong>
-        <span id="lobbyRoomCode" style="font-size: 24px; letter-spacing: 2px;"></span>
-        <button type="button" onclick="copyLobbyRoomCode()" style="margin-left: 10px;">Copy</button>
-      </div>
-      <br>
-      <div id="playerListContainer">
-        <h3>Players:</h3>
-        <div id="playerList"></div>
-      </div>
-      <br>
-      <label>
-        <input type="checkbox" id="readyCheckbox" onchange="toggleReady()">
-        Ready
-      </label>
-      <br><br>
-      <button id="startMultiplayerButton" type="button" onclick="startMultiplayerGame()" style="display:none">
-        Start Game
-      </button>
-      <button type="button" onclick="leaveMultiplayerRoom()">Leave Room</button>
-    </div>
 
     <!-- Disconnection Overlay -->
     <div id="disconnectionOverlay">
