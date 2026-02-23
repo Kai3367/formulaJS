@@ -1,0 +1,16 @@
+---
+applications:
+- name: formulajs
+  memory: 256M
+  instances: 1
+  buildpacks:
+    - nodejs_buildpack
+  command: npm start
+  random-route: true
+  health-check-type: http
+  health-check-http-endpoint: /health
+  env:
+    NODE_ENV: production
+    MAX_ROOMS: 20
+    ROOM_TIMEOUT_MS: 300000
+
